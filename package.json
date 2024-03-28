@@ -1,0 +1,14 @@
+{
+  "name": "com.gilzoide.key-value-store.apple-keychain",
+  "displayName": "Key-Value Store - Apple Keychain",
+  "version": "1.0.0-preview1",
+  "description": "Key-Value Store implementation backed by macOS/iOS/tvOS/visionOS data protection keychain.",
+  "homepage": "https://github.com/gilzoide/unity-key-value-store-apple-keychain",
+  "license": "Unlicense",
+  "author": {
+    "name": "Gil Barbosa Reis"
+  },
+  "dependencies": {
+    "com.gilzoide.key-value-store": "1.0.0"
+  }
+}
