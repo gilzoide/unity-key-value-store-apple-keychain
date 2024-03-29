@@ -11,12 +11,14 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
         public const string LibraryName = "KeyValueStoreAppleKeychain";
 #endif
 
+        // Alloc/Release NSMutableDictionary
         [DllImport(LibraryName)]
-        public static extern bool KeyValueStoreAppleKeychain_AllocDictionary(out IntPtr mutableDictionary);
+        public static extern IntPtr KeyValueStoreAppleKeychain_AllocDictionary();
 
         [DllImport(LibraryName)]
-        public static extern bool KeyValueStoreAppleKeychain_ReleaseDictionary(ref IntPtr mutableDictionary);
+        public static extern bool KeyValueStoreAppleKeychain_ReleaseDictionary(IntPtr mutableDictionary);
 
+        // Read/Write internal NSMutableDictionary
         [DllImport(LibraryName)]
         public static extern void KeyValueStoreAppleKeychain_ClearDictionary(IntPtr mutableDictionary);
 
@@ -33,10 +35,35 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
         public static extern bool KeyValueStoreAppleKeychain_TryGetBool(IntPtr mutableDictionary, [MarshalAs(UnmanagedType.LPUTF8Str)] string key, [MarshalAs(UnmanagedType.Bool)] out bool value);
 
         [DllImport(LibraryName)]
+        public static extern void KeyValueStoreAppleKeychain_SetInt(IntPtr mutableDictionary, [MarshalAs(UnmanagedType.LPUTF8Str)] string key, int value);
+
+        [DllImport(LibraryName)]
+        public static extern bool KeyValueStoreAppleKeychain_TryGetInt(IntPtr mutableDictionary, [MarshalAs(UnmanagedType.LPUTF8Str)] string key, out int value);
+
+        [DllImport(LibraryName)]
+        public static extern void KeyValueStoreAppleKeychain_SetLong(IntPtr mutableDictionary, [MarshalAs(UnmanagedType.LPUTF8Str)] string key, long value);
+
+        [DllImport(LibraryName)]
+        public static extern bool KeyValueStoreAppleKeychain_TryGetLong(IntPtr mutableDictionary, [MarshalAs(UnmanagedType.LPUTF8Str)] string key, out long value);
+
+        [DllImport(LibraryName)]
+        public static extern void KeyValueStoreAppleKeychain_SetFloat(IntPtr mutableDictionary, [MarshalAs(UnmanagedType.LPUTF8Str)] string key, float value);
+
+        [DllImport(LibraryName)]
+        public static extern bool KeyValueStoreAppleKeychain_TryGetFloat(IntPtr mutableDictionary, [MarshalAs(UnmanagedType.LPUTF8Str)] string key, out float value);
+
+        [DllImport(LibraryName)]
+        public static extern void KeyValueStoreAppleKeychain_SetDouble(IntPtr mutableDictionary, [MarshalAs(UnmanagedType.LPUTF8Str)] string key, double value);
+
+        [DllImport(LibraryName)]
+        public static extern bool KeyValueStoreAppleKeychain_TryGetDouble(IntPtr mutableDictionary, [MarshalAs(UnmanagedType.LPUTF8Str)] string key, out double value);
+
+        // Read/Write Keychain
+        [DllImport(LibraryName)]
         public static extern bool KeyValueStoreAppleKeychain_Save([In] AppleKeychainKeyValueStore kvs);
 
         [DllImport(LibraryName)]
-        public static extern bool KeyValueStoreAppleKeychain_Load([In] AppleKeychainKeyValueStore kvs, out IntPtr mutableDictionary);
+        public static extern IntPtr KeyValueStoreAppleKeychain_Load([In] AppleKeychainKeyValueStore kvs);
 
         [DllImport(LibraryName)]
         public static extern bool KeyValueStoreAppleKeychain_DeleteKeychain([In] AppleKeychainKeyValueStore kvs);

@@ -30,12 +30,18 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
 
         public AppleKeychainKeyValueStore()
         {
-            NativeBridge.KeyValueStoreAppleKeychain_AllocDictionary(out _mutableDictionary);
+            _mutableDictionary = NativeBridge.KeyValueStoreAppleKeychain_AllocDictionary();
+        }
+
+        ~AppleKeychainKeyValueStore()
+        {
+            Dispose();
         }
 
         public void Dispose()
         {
-            NativeBridge.KeyValueStoreAppleKeychain_ReleaseDictionary(ref _mutableDictionary);
+            NativeBridge.KeyValueStoreAppleKeychain_ReleaseDictionary(_mutableDictionary);
+            _mutableDictionary = IntPtr.Zero;
         }
 
         public void DeleteAll()
@@ -65,22 +71,22 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
 
         public void SetDouble(string key, double value)
         {
-            throw new System.NotImplementedException();
+            NativeBridge.KeyValueStoreAppleKeychain_SetDouble(_mutableDictionary, key, value);
         }
 
         public void SetFloat(string key, float value)
         {
-            throw new System.NotImplementedException();
+            NativeBridge.KeyValueStoreAppleKeychain_SetFloat(_mutableDictionary, key, value);
         }
 
         public void SetInt(string key, int value)
         {
-            throw new System.NotImplementedException();
+            NativeBridge.KeyValueStoreAppleKeychain_SetInt(_mutableDictionary, key, value);
         }
 
         public void SetLong(string key, long value)
         {
-            throw new System.NotImplementedException();
+            NativeBridge.KeyValueStoreAppleKeychain_SetLong(_mutableDictionary, key, value);
         }
 
         public void SetString(string key, string value)
@@ -100,22 +106,22 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
 
         public bool TryGetDouble(string key, out double value)
         {
-            throw new System.NotImplementedException();
+            return NativeBridge.KeyValueStoreAppleKeychain_TryGetDouble(_mutableDictionary, key, out value);
         }
 
         public bool TryGetFloat(string key, out float value)
         {
-            throw new System.NotImplementedException();
+            return NativeBridge.KeyValueStoreAppleKeychain_TryGetFloat(_mutableDictionary, key, out value);
         }
 
         public bool TryGetInt(string key, out int value)
         {
-            throw new System.NotImplementedException();
+            return NativeBridge.KeyValueStoreAppleKeychain_TryGetInt(_mutableDictionary, key, out value);
         }
 
         public bool TryGetLong(string key, out long value)
         {
-            throw new System.NotImplementedException();
+            return NativeBridge.KeyValueStoreAppleKeychain_TryGetLong(_mutableDictionary, key, out value);
         }
 
         public bool TryGetString(string key, out string value)
@@ -125,7 +131,8 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
 
         public void Load()
         {
-            NativeBridge.KeyValueStoreAppleKeychain_Load(this, out _mutableDictionary);
+            NativeBridge.KeyValueStoreAppleKeychain_ReleaseDictionary(_mutableDictionary);
+            _mutableDictionary = NativeBridge.KeyValueStoreAppleKeychain_Load(this);
         }
 
         public void Save()

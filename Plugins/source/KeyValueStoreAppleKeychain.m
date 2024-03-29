@@ -34,7 +34,7 @@ static void logSecError(OSStatus result) {
 /// Log NSError message to Unity's console.
 static void logNSError(NSError* error) {
     if (error) {
-        UNITY_LOG_ERROR(logger, error.localizedDescription.UTF8String);
+        UNITY_LOG_ERROR(logger, error.debugDescription.UTF8String);
     }
 }
 
@@ -50,7 +50,7 @@ typedef struct AppleKeychainKeyValueStore {
     const char *description;
     int isSynchronizable;
     int useDataProtectionKeychain;
-    NSMutableDictionary* mutableDictionary;
+    CFMutableDictionaryRef mutableDictionary;
 } AppleKeychainKeyValueStore;
 
 static NSMutableDictionary* createBaseQuery(const AppleKeychainKeyValueStore *kvs) {
@@ -114,13 +114,6 @@ static bool setData(const AppleKeychainKeyValueStore *kvs, id data) {
     }
 }
 
-static bool hasData(const AppleKeychainKeyValueStore *kvs) {
-    NSMutableDictionary* query = createBaseQuery(kvs);
-    OSStatus result = SecItemCopyMatching((CFDictionaryRef) query, NULL);
-    logSecError(result);
-    return result == errSecSuccess;
-}
-
 static NSData* getData(const AppleKeychainKeyValueStore *kvs) {
     NSMutableDictionary* query = createBaseQuery(kvs);
     [query setObject:@YES forKey:(id)kSecReturnData];
@@ -163,13 +156,14 @@ void UNITY_INTERFACE_EXPORT UnityPluginLoad(IUnityInterfaces* unityInterfaces) {
     logger = UNITY_GET_INTERFACE(unityInterfaces, IUnityLog);
 }
 
-void KeyValueStoreAppleKeychain_AllocDictionary(NSMutableDictionary** dict) {
-    *dict = [[NSMutableDictionary alloc] init];
+CFTypeRef KeyValueStoreAppleKeychain_AllocDictionary() {
+    return CFBridgingRetain([NSMutableDictionary dictionary]);
 }
 
-void KeyValueStoreAppleKeychain_ReleaseDictionary(NSMutableDictionary** dict) {
-    [*dict release];
-    *dict = nil;
+void KeyValueStoreAppleKeychain_ReleaseDictionary(CFTypeRef ref) {
+    if (ref) {
+        CFRelease(ref);
+    }
 }
 
 void KeyValueStoreAppleKeychain_ClearDictionary(NSMutableDictionary* dict) {
@@ -200,14 +194,77 @@ bool KeyValueStoreAppleKeychain_TryGetBool(NSMutableDictionary* dict, const char
     }
 }
 
-bool KeyValueStoreAppleKeychain_Save(const AppleKeychainKeyValueStore *kvs) {
-    return setData(kvs, kvs->mutableDictionary);
+void KeyValueStoreAppleKeychain_SetInt(NSMutableDictionary* dict, const char *key, int value) {
+    [dict setObject:@(value) forKey:toNSString(key)];
 }
 
-bool KeyValueStoreAppleKeychain_Load(const AppleKeychainKeyValueStore *kvs, NSMutableDictionary** dict) {
-    [*dict release];
-    *dict = getTypedData(kvs, NSMutableDictionary.class);
-    return *dict;
+bool KeyValueStoreAppleKeychain_TryGetInt(NSMutableDictionary* dict, const char *key, int *outValue) {
+    id value = [dict valueForKey:toNSString(key)];
+    if ([value isKindOfClass:NSNumber.class]) {
+        *outValue = [value intValue];
+        return true;
+    }
+    else {
+        *outValue = 0;
+        return false;
+    }
+}
+
+void KeyValueStoreAppleKeychain_SetLong(NSMutableDictionary* dict, const char *key, long value) {
+    [dict setObject:@(value) forKey:toNSString(key)];
+}
+
+bool KeyValueStoreAppleKeychain_TryGetLong(NSMutableDictionary* dict, const char *key, long *outValue) {
+    id value = [dict valueForKey:toNSString(key)];
+    if ([value isKindOfClass:NSNumber.class]) {
+        *outValue = [value longValue];
+        return true;
+    }
+    else {
+        *outValue = 0;
+        return false;
+    }
+}
+
+void KeyValueStoreAppleKeychain_SetFloat(NSMutableDictionary* dict, const char *key, float value) {
+    [dict setObject:@(value) forKey:toNSString(key)];
+}
+
+bool KeyValueStoreAppleKeychain_TryGetFloat(NSMutableDictionary* dict, const char *key, float *outValue) {
+    id value = [dict valueForKey:toNSString(key)];
+    if ([value isKindOfClass:NSNumber.class]) {
+        *outValue = [value floatValue];
+        return true;
+    }
+    else {
+        *outValue = 0;
+        return false;
+    }
+}
+
+void KeyValueStoreAppleKeychain_SetDouble(NSMutableDictionary* dict, const char *key, double value) {
+    [dict setObject:@(value) forKey:toNSString(key)];
+}
+
+bool KeyValueStoreAppleKeychain_TryGetDouble(NSMutableDictionary* dict, const char *key, double *outValue) {
+    id value = [dict valueForKey:toNSString(key)];
+    if ([value isKindOfClass:NSNumber.class]) {
+        *outValue = [value doubleValue];
+        return true;
+    }
+    else {
+        *outValue = 0;
+        return false;
+    }
+}
+
+bool KeyValueStoreAppleKeychain_Save(const AppleKeychainKeyValueStore *kvs) {
+    return setData(kvs, (__bridge id)kvs->mutableDictionary);
+}
+
+CFTypeRef KeyValueStoreAppleKeychain_Load(const AppleKeychainKeyValueStore *kvs) {
+    NSMutableDictionary* mutableDictionary = getTypedData(kvs, NSMutableDictionary.class);
+    return CFBridgingRetain(mutableDictionary);
 }
 
 bool KeyValueStoreAppleKeychain_DeleteKeychain(const AppleKeychainKeyValueStore *kvs) {
