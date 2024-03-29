@@ -5,27 +5,27 @@ using Unity.Collections.LowLevel.Unsafe;
 
 namespace Gilzoide.KeyValueStore.AppleKeychain
 {
-    public class AppleKeychainKeyValueStore : ISavableKeyValueStore, IDisposable
+    public class AppleGenericPasswordKeychainItemKeyValueStore : ISavableKeyValueStore, IDisposable
     {
-        public AppleKeychainOptions Options { get; }
+        public AppleGenericPasswordKeychainAttributes KeychainAttributes { get; }
 
         private IntPtr _mutableDictionary = IntPtr.Zero;
 
-        public AppleKeychainKeyValueStore() : this(new AppleKeychainOptions())
+        public AppleGenericPasswordKeychainItemKeyValueStore() : this(new AppleGenericPasswordKeychainAttributes())
         {
         }
 
-        public AppleKeychainKeyValueStore(AppleKeychainOptions options)
+        public AppleGenericPasswordKeychainItemKeyValueStore(AppleGenericPasswordKeychainAttributes attributes)
         {
-            if (options == null)
+            if (attributes == null)
             {
-                throw new ArgumentNullException(nameof(options));
+                throw new ArgumentNullException(nameof(attributes));
             }
-            Options = options;
+            KeychainAttributes = attributes;
             _mutableDictionary = NativeBridge.KeyValueStoreAppleKeychain_AllocDictionary();
         }
 
-        ~AppleKeychainKeyValueStore()
+        ~AppleGenericPasswordKeychainItemKeyValueStore()
         {
             Dispose();
         }
@@ -170,17 +170,17 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
         public void Load()
         {
             NativeBridge.KeyValueStoreAppleKeychain_Release(_mutableDictionary);
-            _mutableDictionary = NativeBridge.KeyValueStoreAppleKeychain_Load(Options);
+            _mutableDictionary = NativeBridge.KeyValueStoreAppleKeychain_Load(KeychainAttributes);
         }
 
         public void Save()
         {
-            NativeBridge.KeyValueStoreAppleKeychain_Save(Options, _mutableDictionary);
+            NativeBridge.KeyValueStoreAppleKeychain_Save(KeychainAttributes, _mutableDictionary);
         }
 
         public void DeleteKeychain()
         {
-            NativeBridge.KeyValueStoreAppleKeychain_DeleteKeychain(Options);
+            NativeBridge.KeyValueStoreAppleKeychain_DeleteKeychain(KeychainAttributes);
         }
     }
 }
