@@ -29,7 +29,7 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
 
         public void DeleteKey(string key)
         {
-            throw new System.NotImplementedException();
+            NativeBridge.KeyValueStoreAppleKeychain_DeleteKey(this, key);
         }
 
         public bool HasKey(string key)

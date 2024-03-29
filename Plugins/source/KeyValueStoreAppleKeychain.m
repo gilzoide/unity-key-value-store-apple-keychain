@@ -132,11 +132,22 @@ static id getTypedData(const AppleKeychainKeyValueStore *kvs, const char *key, C
     }
 }
 
+static bool deleteData(const AppleKeychainKeyValueStore *kvs, const char *key) {
+    NSMutableDictionary* query = createBaseQuery(kvs, key);
+    OSStatus result = SecItemDelete((CFDictionaryRef) query);
+    logSecError(result);
+    return result == errSecSuccess;
+}
+
 ///////////////////////////////////////////////////////////
 // Exported functions
 ///////////////////////////////////////////////////////////
 void UNITY_INTERFACE_EXPORT UnityPluginLoad(IUnityInterfaces* unityInterfaces) {
     logger = UNITY_GET_INTERFACE(unityInterfaces, IUnityLog);
+}
+
+bool KeyValueStoreAppleKeychain_DeleteKey(const AppleKeychainKeyValueStore *kvs, const char *key) {
+    return deleteData(kvs, key);
 }
 
 bool KeyValueStoreAppleKeychain_HasKey(const AppleKeychainKeyValueStore *kvs, const char *key) {

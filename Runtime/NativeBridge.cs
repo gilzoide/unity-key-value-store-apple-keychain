@@ -11,6 +11,12 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
 #endif
 
         [DllImport(LibraryName)]
+        public static extern bool KeyValueStoreAppleKeychain_DeleteKey(
+            [In] AppleKeychainKeyValueStore kvs,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string key
+        );
+
+        [DllImport(LibraryName)]
         public static extern bool KeyValueStoreAppleKeychain_HasKey(
             [In] AppleKeychainKeyValueStore kvs,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string key
