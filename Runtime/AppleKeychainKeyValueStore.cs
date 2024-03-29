@@ -34,7 +34,7 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
 
         public bool HasKey(string key)
         {
-            throw new System.NotImplementedException();
+            return NativeBridge.KeyValueStoreAppleKeychain_HasKey(this, key);
         }
 
         public void SetBool(string key, bool value)

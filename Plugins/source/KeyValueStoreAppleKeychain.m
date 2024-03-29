@@ -6,6 +6,7 @@
 
 static IUnityLog *logger;
 
+/// Log a formatted debug message to Unity's console
 static void debugLogFormat(NSString* fmt, ...) {
     va_list va;
     va_start(va, fmt);
@@ -14,6 +15,8 @@ static void debugLogFormat(NSString* fmt, ...) {
     UNITY_LOG(logger, msg.UTF8String);
 }
 
+/// Log OSStatus error messages to Unity's console.
+/// Ignores `errSecSuccess` and `errSecItemNotFound`.
 static void logSecError(OSStatus result) {
     switch (result) {
         case errSecSuccess:
@@ -28,18 +31,23 @@ static void logSecError(OSStatus result) {
     }
 }
 
+/// Log NSError message to Unity's console.
 static void logNSError(NSError* error) {
     if (error) {
         UNITY_LOG_ERROR(logger, error.localizedDescription.UTF8String);
     }
 }
 
+/// @warning Must match the C# AppleKeychainKeyValueStore class!!!
 typedef struct AppleKeychainKeyValueStore {
     const char *serviceName;
     int isSynchronizable;
     int useDataProtectionKeychain;
 } AppleKeychainKeyValueStore;
 
+///////////////////////////////////////////////////////////
+// Get/Set key-value pairs
+///////////////////////////////////////////////////////////
 static bool setData(const AppleKeychainKeyValueStore *kvs, const char *keyCstr, id data) {
     NSError* error = nil;
     NSData* archivedData = [NSKeyedArchiver archivedDataWithRootObject:data requiringSecureCoding:YES error:&error];
@@ -50,7 +58,6 @@ static bool setData(const AppleKeychainKeyValueStore *kvs, const char *keyCstr, 
 
     NSString* service = [NSString stringWithCString:kvs->serviceName encoding:NSUTF8StringEncoding];
     NSString* key = [NSString stringWithCString:keyCstr encoding:NSUTF8StringEncoding];
-
     NSMutableDictionary* query = [NSMutableDictionary dictionaryWithObjectsAndKeys:
         (id)kSecClassGenericPassword, (id)kSecClass,
         service, (id)kSecAttrService,
@@ -89,10 +96,9 @@ static bool setData(const AppleKeychainKeyValueStore *kvs, const char *keyCstr, 
     }
 }
 
-static id getData(const AppleKeychainKeyValueStore *kvs, const char *keyCstr, Class cls) {
+static NSData* getData(const AppleKeychainKeyValueStore *kvs, const char *keyCstr) {
     NSString* service = [NSString stringWithCString:kvs->serviceName encoding:NSUTF8StringEncoding];
     NSString* key = [NSString stringWithCString:keyCstr encoding:NSUTF8StringEncoding];
-
     NSMutableDictionary* query = [NSMutableDictionary dictionaryWithObjectsAndKeys:
         (id)kSecClassGenericPassword, (id)kSecClass,
         service, (id)kSecAttrService,
@@ -104,13 +110,8 @@ static id getData(const AppleKeychainKeyValueStore *kvs, const char *keyCstr, Cl
     CFTypeRef existingData;
     OSStatus result = SecItemCopyMatching((CFDictionaryRef) query, &existingData);
     switch (result) {
-        case errSecSuccess: {
-            NSData* data = CFBridgingRelease(existingData);
-            NSError* error = nil;
-            id value = [NSKeyedUnarchiver unarchivedObjectOfClass:cls fromData:data error:&error];
-            logNSError(error);
-            return value;
-        }
+        case errSecSuccess:
+            return CFBridgingRelease(existingData);
 
         default:
             logSecError(result);
@@ -118,8 +119,28 @@ static id getData(const AppleKeychainKeyValueStore *kvs, const char *keyCstr, Cl
     }
 }
 
+static id getTypedData(const AppleKeychainKeyValueStore *kvs, const char *keyCstr, Class cls) {
+    NSData* data = getData(kvs, keyCstr);
+    if (data) {
+        NSError* error = nil;
+        id value = [NSKeyedUnarchiver unarchivedObjectOfClass:cls fromData:data error:&error];
+        logNSError(error);
+        return value;
+    }
+    else {
+        return nil;
+    }
+}
+
+///////////////////////////////////////////////////////////
+// Exported functions
+///////////////////////////////////////////////////////////
 void UNITY_INTERFACE_EXPORT UnityPluginLoad(IUnityInterfaces* unityInterfaces) {
     logger = UNITY_GET_INTERFACE(unityInterfaces, IUnityLog);
+}
+
+bool KeyValueStoreAppleKeychain_HasKey(const AppleKeychainKeyValueStore *kvs, const char *keyCstr) {
+    return getData(kvs, keyCstr) != nil;
 }
 
 bool KeyValueStoreAppleKeychain_SetBool(const AppleKeychainKeyValueStore *kvs, const char *keyCstr, int value) {
@@ -127,7 +148,7 @@ bool KeyValueStoreAppleKeychain_SetBool(const AppleKeychainKeyValueStore *kvs, c
 }
 
 bool KeyValueStoreAppleKeychain_TryGetBool(const AppleKeychainKeyValueStore *kvs, const char *keyCstr, int *outValue) {
-    NSNumber* value = getData(kvs, keyCstr, NSNumber.class);
+    NSNumber* value = getTypedData(kvs, keyCstr, NSNumber.class);
     if (value) {
         *outValue = value.boolValue;
         return true;
