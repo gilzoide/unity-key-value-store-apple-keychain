@@ -4,6 +4,7 @@
 #import "IUnityInterface.h"
 #import "IUnityLog.h"
 
+/// Unity logger
 static IUnityLog *logger;
 
 /// Log a formatted debug message to Unity's console
@@ -67,7 +68,7 @@ static NSMutableDictionary* createBaseQuery(const AppleKeychainKeyValueStore *kv
     return query;
 }
 
-static void fillAdditionalData(const AppleKeychainKeyValueStore *kvs, NSMutableDictionary* query, NSData* data) {
+static void fillAttributesToUpdate(const AppleKeychainKeyValueStore *kvs, NSMutableDictionary* query, NSData* data) {
     if (kvs->label) {
         [query setObject:toNSString(kvs->label) forKey:(id)kSecAttrLabel];
     }
@@ -96,14 +97,14 @@ static bool setData(const AppleKeychainKeyValueStore *kvs, id data) {
     switch (result) {
         case errSecSuccess: {
             NSMutableDictionary* attributesToUpdate = [NSMutableDictionary dictionary];
-            fillAdditionalData(kvs, attributesToUpdate, archivedData);
+            fillAttributesToUpdate(kvs, attributesToUpdate, archivedData);
             OSStatus result = SecItemUpdate((CFDictionaryRef) query, (CFDictionaryRef) attributesToUpdate);
             logSecError(result);
             return result == errSecSuccess;
         }
 
         case errSecItemNotFound:
-            fillAdditionalData(kvs, query, archivedData);
+            fillAttributesToUpdate(kvs, query, archivedData);
             result = SecItemAdd((CFDictionaryRef) query, NULL);
             logSecError(result);
             return result == errSecSuccess;
@@ -160,7 +161,7 @@ CFTypeRef KeyValueStoreAppleKeychain_AllocDictionary() {
     return CFBridgingRetain([NSMutableDictionary dictionary]);
 }
 
-void KeyValueStoreAppleKeychain_ReleaseDictionary(CFTypeRef ref) {
+void KeyValueStoreAppleKeychain_Release(CFTypeRef ref) {
     if (ref) {
         CFRelease(ref);
     }
@@ -255,6 +256,40 @@ bool KeyValueStoreAppleKeychain_TryGetDouble(NSMutableDictionary* dict, const ch
     else {
         *outValue = 0;
         return false;
+    }
+}
+
+void KeyValueStoreAppleKeychain_SetData(NSMutableDictionary* dict, const char *key, const void *bytes, int length) {
+    [dict setObject:[NSData dataWithBytes:bytes length:length] forKey:toNSString(key)];
+}
+
+bool KeyValueStoreAppleKeychain_TryGetData(NSMutableDictionary* dict, const char *key, CFDataRef *outValue) {
+    id value = [dict valueForKey:toNSString(key)];
+    if ([value isKindOfClass:NSData.class]) {
+        *outValue = CFBridgingRetain(value);
+        return true;
+    }
+    else {
+        *outValue = nil;
+        return false;
+    }
+}
+
+const void *KeyValueStoreAppleKeychain_DataGetBytePtr(CFDataRef ref) {
+    if (ref) {
+        return CFDataGetBytePtr(ref);
+    }
+    else {
+        return NULL;
+    }
+}
+
+int KeyValueStoreAppleKeychain_DataGetLength(CFDataRef ref) {
+    if (ref) {
+        return CFDataGetLength(ref);
+    }
+    else {
+        return 0;
     }
 }
 

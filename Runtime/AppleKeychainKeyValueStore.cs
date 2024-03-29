@@ -1,6 +1,7 @@
 #if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS
 using System;
 using System.Runtime.InteropServices;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
 namespace Gilzoide.KeyValueStore.AppleKeychain
@@ -40,7 +41,7 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
 
         public void Dispose()
         {
-            NativeBridge.KeyValueStoreAppleKeychain_ReleaseDictionary(_mutableDictionary);
+            NativeBridge.KeyValueStoreAppleKeychain_Release(_mutableDictionary);
             _mutableDictionary = IntPtr.Zero;
         }
 
@@ -66,7 +67,13 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
 
         public void SetBytes(string key, byte[] value)
         {
-            throw new System.NotImplementedException();
+            unsafe
+            {
+                fixed (void* ptr = value)
+                {
+                    NativeBridge.KeyValueStoreAppleKeychain_SetData(_mutableDictionary, key, ptr, value.Length);
+                }
+            }
         }
 
         public void SetDouble(string key, double value)
@@ -91,7 +98,13 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
 
         public void SetString(string key, string value)
         {
-            throw new System.NotImplementedException();
+            unsafe
+            {
+                fixed (void* ptr = value)
+                {
+                    NativeBridge.KeyValueStoreAppleKeychain_SetData(_mutableDictionary, key, ptr, value.Length * sizeof(char));
+                }
+            }
         }
 
         public bool TryGetBool(string key, out bool value)
@@ -101,7 +114,26 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
 
         public bool TryGetBytes(string key, out byte[] value)
         {
-            throw new System.NotImplementedException();
+            if (NativeBridge.KeyValueStoreAppleKeychain_TryGetData(_mutableDictionary, key, out IntPtr cfdata))
+            {
+                unsafe
+                {
+                    void* bytes = NativeBridge.KeyValueStoreAppleKeychain_DataGetBytePtr(cfdata);
+                    int length = NativeBridge.KeyValueStoreAppleKeychain_DataGetLength(cfdata);
+                    value = new byte[length];
+                    fixed (void* valuePtr = value)
+                    {
+                        UnsafeUtility.MemCpy(valuePtr, bytes, length);
+                    }
+                }
+                NativeBridge.KeyValueStoreAppleKeychain_Release(cfdata);
+                return true;
+            }
+            else
+            {
+                value = null;
+                return false;
+            }
         }
 
         public bool TryGetDouble(string key, out double value)
@@ -126,12 +158,27 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
 
         public bool TryGetString(string key, out string value)
         {
-            throw new System.NotImplementedException();
+            if (NativeBridge.KeyValueStoreAppleKeychain_TryGetData(_mutableDictionary, key, out IntPtr cfdata))
+            {
+                unsafe
+                {
+                    void* bytes = NativeBridge.KeyValueStoreAppleKeychain_DataGetBytePtr(cfdata);
+                    int length = NativeBridge.KeyValueStoreAppleKeychain_DataGetLength(cfdata);
+                    value = Marshal.PtrToStringUni((IntPtr) bytes, length);
+                }
+                NativeBridge.KeyValueStoreAppleKeychain_Release(cfdata);
+                return true;
+            }
+            else
+            {
+                value = null;
+                return false;
+            }
         }
 
         public void Load()
         {
-            NativeBridge.KeyValueStoreAppleKeychain_ReleaseDictionary(_mutableDictionary);
+            NativeBridge.KeyValueStoreAppleKeychain_Release(_mutableDictionary);
             _mutableDictionary = NativeBridge.KeyValueStoreAppleKeychain_Load(this);
         }
 
