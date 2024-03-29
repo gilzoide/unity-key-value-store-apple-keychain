@@ -1,3 +1,4 @@
+#if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS
 using System;
 using System.Runtime.InteropServices;
 
@@ -73,12 +74,13 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
 
         // Read/Write Keychain
         [DllImport(LibraryName)]
-        public static extern bool KeyValueStoreAppleKeychain_Save([In] AppleKeychainKeyValueStore kvs);
+        public static extern bool KeyValueStoreAppleKeychain_Save([In] AppleKeychainOptions kvs, IntPtr dictionary);
 
         [DllImport(LibraryName)]
-        public static extern IntPtr KeyValueStoreAppleKeychain_Load([In] AppleKeychainKeyValueStore kvs);
+        public static extern IntPtr KeyValueStoreAppleKeychain_Load([In] AppleKeychainOptions kvs);
 
         [DllImport(LibraryName)]
-        public static extern bool KeyValueStoreAppleKeychain_DeleteKeychain([In] AppleKeychainKeyValueStore kvs);
+        public static extern bool KeyValueStoreAppleKeychain_DeleteKeychain([In] AppleKeychainOptions kvs);
     }
 }
+#endif

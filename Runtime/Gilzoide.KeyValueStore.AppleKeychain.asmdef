@@ -4,13 +4,7 @@
     "references": [
         "Gilzoide.KeyValueStore"
     ],
-    "includePlatforms": [
-        "Editor",
-        "iOS",
-        "macOSStandalone",
-        "tvOS",
-        "VisionOS"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
     "overrideReferences": false,
