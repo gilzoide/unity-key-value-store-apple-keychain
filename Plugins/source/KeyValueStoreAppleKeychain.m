@@ -38,26 +38,52 @@ static void logNSError(NSError* error) {
     }
 }
 
+static NSString* toNSString(const char *cStr) {
+    return [NSString stringWithCString:cStr encoding:NSUTF8StringEncoding];
+}
+
 /// @warning Must match the C# AppleKeychainKeyValueStore class!!!
 typedef struct AppleKeychainKeyValueStore {
-    const char *serviceName;
+    const char *account;
+    const char *service;
+    const char *label;
+    const char *description;
     int isSynchronizable;
     int useDataProtectionKeychain;
+    NSMutableDictionary* mutableDictionary;
 } AppleKeychainKeyValueStore;
 
-static NSMutableDictionary* createBaseQuery(const AppleKeychainKeyValueStore *kvs, const char *key) {
-    return [NSMutableDictionary dictionaryWithObjectsAndKeys:
-        (id)kSecClassGenericPassword, (id)kSecClass,
-        [NSString stringWithCString:kvs->serviceName encoding:NSUTF8StringEncoding], (id)kSecAttrService,
-        [NSString stringWithCString:key encoding:NSUTF8StringEncoding], (id)kSecAttrAccount,
-        nil
-    ];
+static NSMutableDictionary* createBaseQuery(const AppleKeychainKeyValueStore *kvs) {
+    NSMutableDictionary* query = [NSMutableDictionary dictionaryWithObject:(id)kSecClassGenericPassword forKey:(id)kSecClass];
+    if (kvs->account) {
+        [query setObject:toNSString(kvs->account) forKey:(id)kSecAttrAccount];
+    }
+    if (kvs->service) {
+        [query setObject:toNSString(kvs->service) forKey:(id)kSecAttrService];
+    }
+    if (@available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, visionOS 1.0, *)) {
+        [query setObject:@(kvs->useDataProtectionKeychain) forKey:(id)kSecUseDataProtectionKeychain];
+    }
+    return query;
+}
+
+static void fillAdditionalData(const AppleKeychainKeyValueStore *kvs, NSMutableDictionary* query, NSData* data) {
+    if (kvs->label) {
+        [query setObject:toNSString(kvs->label) forKey:(id)kSecAttrLabel];
+    }
+    if (kvs->description) {
+        [query setObject:toNSString(kvs->description) forKey:(id)kSecAttrDescription];
+    }
+    if (@available(iOS 7.0, macOS 10.9, tvOS 9.0, watchOS 2.0, visionOS 1.0, *)) {
+        [query setObject:@(kvs->isSynchronizable) forKey:(id)kSecAttrSynchronizable];
+    }
+    [query setObject:data forKey:(id)kSecValueData];
 }
 
 ///////////////////////////////////////////////////////////
 // Get/Set key-value pairs
 ///////////////////////////////////////////////////////////
-static bool setData(const AppleKeychainKeyValueStore *kvs, const char *key, id data) {
+static bool setData(const AppleKeychainKeyValueStore *kvs, id data) {
     NSError* error = nil;
     NSData* archivedData = [NSKeyedArchiver archivedDataWithRootObject:data requiringSecureCoding:YES error:&error];
     if (error) {
@@ -65,28 +91,19 @@ static bool setData(const AppleKeychainKeyValueStore *kvs, const char *key, id d
         return false;
     }
 
-    NSMutableDictionary* query = createBaseQuery(kvs, key);
-    if (@available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, visionOS 1.0, *)) {
-        [query setObject:@(kvs->useDataProtectionKeychain) forKey:(id)kSecUseDataProtectionKeychain];
-    }
-
+    NSMutableDictionary* query = createBaseQuery(kvs);
     OSStatus result = SecItemCopyMatching((CFDictionaryRef) query, NULL);
     switch (result) {
         case errSecSuccess: {
-            NSDictionary* attributesToUpdate = @{
-                (id)kSecValueData: archivedData,
-                (id)kSecAttrSynchronizable: @(kvs->isSynchronizable),
-            };
+            NSMutableDictionary* attributesToUpdate = [NSMutableDictionary dictionary];
+            fillAdditionalData(kvs, attributesToUpdate, archivedData);
             OSStatus result = SecItemUpdate((CFDictionaryRef) query, (CFDictionaryRef) attributesToUpdate);
             logSecError(result);
             return result == errSecSuccess;
         }
 
         case errSecItemNotFound:
-            if (@available(iOS 7.0, macOS 10.9, tvOS 9.0, watchOS 2.0, visionOS 1.0, *)) {
-                [query setObject:@(kvs->isSynchronizable) forKey:(id)kSecAttrSynchronizable];
-            }
-            [query setObject:archivedData forKey:(id)kSecValueData];
+            fillAdditionalData(kvs, query, archivedData);
             result = SecItemAdd((CFDictionaryRef) query, NULL);
             logSecError(result);
             return result == errSecSuccess;
@@ -97,15 +114,15 @@ static bool setData(const AppleKeychainKeyValueStore *kvs, const char *key, id d
     }
 }
 
-static bool hasData(const AppleKeychainKeyValueStore *kvs, const char *key) {
-    NSMutableDictionary* query = createBaseQuery(kvs, key);
+static bool hasData(const AppleKeychainKeyValueStore *kvs) {
+    NSMutableDictionary* query = createBaseQuery(kvs);
     OSStatus result = SecItemCopyMatching((CFDictionaryRef) query, NULL);
     logSecError(result);
     return result == errSecSuccess;
 }
 
-static NSData* getData(const AppleKeychainKeyValueStore *kvs, const char *key) {
-    NSMutableDictionary* query = createBaseQuery(kvs, key);
+static NSData* getData(const AppleKeychainKeyValueStore *kvs) {
+    NSMutableDictionary* query = createBaseQuery(kvs);
     [query setObject:@YES forKey:(id)kSecReturnData];
     CFTypeRef existingData;
     OSStatus result = SecItemCopyMatching((CFDictionaryRef) query, &existingData);
@@ -119,8 +136,8 @@ static NSData* getData(const AppleKeychainKeyValueStore *kvs, const char *key) {
     }
 }
 
-static id getTypedData(const AppleKeychainKeyValueStore *kvs, const char *key, Class cls) {
-    NSData* data = getData(kvs, key);
+static id getTypedData(const AppleKeychainKeyValueStore *kvs, Class cls) {
+    NSData* data = getData(kvs);
     if (data) {
         NSError* error = nil;
         id value = [NSKeyedUnarchiver unarchivedObjectOfClass:cls fromData:data error:&error];
@@ -132,8 +149,8 @@ static id getTypedData(const AppleKeychainKeyValueStore *kvs, const char *key, C
     }
 }
 
-static bool deleteData(const AppleKeychainKeyValueStore *kvs, const char *key) {
-    NSMutableDictionary* query = createBaseQuery(kvs, key);
+static bool deleteData(const AppleKeychainKeyValueStore *kvs) {
+    NSMutableDictionary* query = createBaseQuery(kvs);
     OSStatus result = SecItemDelete((CFDictionaryRef) query);
     logSecError(result);
     return result == errSecSuccess;
@@ -146,26 +163,53 @@ void UNITY_INTERFACE_EXPORT UnityPluginLoad(IUnityInterfaces* unityInterfaces) {
     logger = UNITY_GET_INTERFACE(unityInterfaces, IUnityLog);
 }
 
-bool KeyValueStoreAppleKeychain_DeleteKey(const AppleKeychainKeyValueStore *kvs, const char *key) {
-    return deleteData(kvs, key);
+void KeyValueStoreAppleKeychain_AllocDictionary(NSMutableDictionary** dict) {
+    *dict = [[NSMutableDictionary alloc] init];
 }
 
-bool KeyValueStoreAppleKeychain_HasKey(const AppleKeychainKeyValueStore *kvs, const char *key) {
-    return hasData(kvs, key);
+void KeyValueStoreAppleKeychain_ReleaseDictionary(NSMutableDictionary** dict) {
+    [*dict release];
+    *dict = nil;
 }
 
-bool KeyValueStoreAppleKeychain_SetBool(const AppleKeychainKeyValueStore *kvs, const char *key, int value) {
-    return setData(kvs, key, @(value));
+void KeyValueStoreAppleKeychain_ClearDictionary(NSMutableDictionary* dict) {
+    [dict removeAllObjects];
 }
 
-bool KeyValueStoreAppleKeychain_TryGetBool(const AppleKeychainKeyValueStore *kvs, const char *key, int *outValue) {
-    NSNumber* value = getTypedData(kvs, key, NSNumber.class);
-    if (value) {
-        *outValue = value.boolValue;
+void KeyValueStoreAppleKeychain_DeleteKey(NSMutableDictionary* dict, const char *key) {
+    [dict removeObjectForKey:toNSString(key)];
+}
+
+bool KeyValueStoreAppleKeychain_HasKey(NSMutableDictionary* dict, const char *key) {
+    return [dict valueForKey:toNSString(key)];
+}
+
+void KeyValueStoreAppleKeychain_SetBool(NSMutableDictionary* dict, const char *key, int value) {
+    [dict setObject:@(value) forKey:toNSString(key)];
+}
+
+bool KeyValueStoreAppleKeychain_TryGetBool(NSMutableDictionary* dict, const char *key, int *outValue) {
+    id value = [dict valueForKey:toNSString(key)];
+    if ([value isKindOfClass:NSNumber.class]) {
+        *outValue = [value boolValue];
         return true;
     }
     else {
         *outValue = 0;
         return false;
     }
+}
+
+bool KeyValueStoreAppleKeychain_Save(const AppleKeychainKeyValueStore *kvs) {
+    return setData(kvs, kvs->mutableDictionary);
+}
+
+bool KeyValueStoreAppleKeychain_Load(const AppleKeychainKeyValueStore *kvs, NSMutableDictionary** dict) {
+    [*dict release];
+    *dict = getTypedData(kvs, NSMutableDictionary.class);
+    return *dict;
+}
+
+bool KeyValueStoreAppleKeychain_DeleteKeychain(const AppleKeychainKeyValueStore *kvs) {
+    return deleteData(kvs);
 }

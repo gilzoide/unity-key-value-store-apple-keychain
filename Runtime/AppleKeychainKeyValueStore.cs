@@ -1,45 +1,61 @@
 #if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS
+using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace Gilzoide.KeyValueStore.AppleKeychain
 {
     [StructLayout(LayoutKind.Sequential)]
-    public class AppleKeychainKeyValueStore : IKeyValueStore
+    public class AppleKeychainKeyValueStore : ISavableKeyValueStore, IDisposable
     {
         [field: MarshalAs(UnmanagedType.LPUTF8Str)]
-        public string ServiceName { get; set; }
+        public string Account { get; set; } = null;
+
+        [field: MarshalAs(UnmanagedType.LPUTF8Str)]
+        public string Service { get; set; } = Application.identifier;
+
+        [field: MarshalAs(UnmanagedType.LPUTF8Str)]
+        public string Label { get; set; } = null;
+
+        [field: MarshalAs(UnmanagedType.LPUTF8Str)]
+        public string Description { get; set; } = null;
 
         [field: MarshalAs(UnmanagedType.Bool)]
-        public bool IsSynchronizable { get; set; }
+        public bool IsSynchronizable { get; set; } = false;
 
         [field: MarshalAs(UnmanagedType.Bool)]
         private readonly bool _useDataProtectionKeychain = !Application.isEditor;
 
-        public AppleKeychainKeyValueStore(string serviceName, bool isSynchronizable)
+        private IntPtr _mutableDictionary = IntPtr.Zero;
+
+        public AppleKeychainKeyValueStore()
         {
-            ServiceName = serviceName;
-            IsSynchronizable = isSynchronizable;
+            NativeBridge.KeyValueStoreAppleKeychain_AllocDictionary(out _mutableDictionary);
+        }
+
+        public void Dispose()
+        {
+            NativeBridge.KeyValueStoreAppleKeychain_ReleaseDictionary(ref _mutableDictionary);
         }
 
         public void DeleteAll()
         {
-            throw new System.NotImplementedException();
+            NativeBridge.KeyValueStoreAppleKeychain_ClearDictionary(_mutableDictionary);
         }
 
         public void DeleteKey(string key)
         {
-            NativeBridge.KeyValueStoreAppleKeychain_DeleteKey(this, key);
+            NativeBridge.KeyValueStoreAppleKeychain_DeleteKey(_mutableDictionary, key);
         }
 
         public bool HasKey(string key)
         {
-            return NativeBridge.KeyValueStoreAppleKeychain_HasKey(this, key);
+            return NativeBridge.KeyValueStoreAppleKeychain_HasKey(_mutableDictionary, key);
         }
 
         public void SetBool(string key, bool value)
         {
-            NativeBridge.KeyValueStoreAppleKeychain_SetBool(this, key, value);
+            NativeBridge.KeyValueStoreAppleKeychain_SetBool(_mutableDictionary, key, value);
         }
 
         public void SetBytes(string key, byte[] value)
@@ -74,7 +90,7 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
 
         public bool TryGetBool(string key, out bool value)
         {
-            return NativeBridge.KeyValueStoreAppleKeychain_TryGetBool(this, key, out value);
+            return NativeBridge.KeyValueStoreAppleKeychain_TryGetBool(_mutableDictionary, key, out value);
         }
 
         public bool TryGetBytes(string key, out byte[] value)
@@ -105,6 +121,21 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
         public bool TryGetString(string key, out string value)
         {
             throw new System.NotImplementedException();
+        }
+
+        public void Load()
+        {
+            NativeBridge.KeyValueStoreAppleKeychain_Load(this, out _mutableDictionary);
+        }
+
+        public void Save()
+        {
+            NativeBridge.KeyValueStoreAppleKeychain_Save(this);
+        }
+
+        public void DeleteKeychain()
+        {
+            NativeBridge.KeyValueStoreAppleKeychain_DeleteKeychain(this);
         }
     }
 }
