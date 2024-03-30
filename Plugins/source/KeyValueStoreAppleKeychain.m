@@ -43,17 +43,17 @@ static NSString* toNSString(const char *cStr) {
     return [NSString stringWithCString:cStr encoding:NSUTF8StringEncoding];
 }
 
-/// @warning Must match the C# AppleKeychainOptions class!!!
-typedef struct AppleKeychainOptions {
+/// @warning Must match the C# GenericPasswordKeychainAttributes class!!!
+typedef struct GenericPasswordKeychainAttributes {
     const char *account;
     const char *service;
     const char *label;
     const char *description;
     int isSynchronizable;
     int useDataProtectionKeychain;
-} AppleKeychainOptions;
+} GenericPasswordKeychainAttributes;
 
-static NSMutableDictionary* createBaseQuery(const AppleKeychainOptions *kvs) {
+static NSMutableDictionary* createBaseQuery(const GenericPasswordKeychainAttributes *kvs) {
     NSMutableDictionary* query = [NSMutableDictionary dictionaryWithObject:(id)kSecClassGenericPassword forKey:(id)kSecClass];
     if (kvs->account) {
         [query setObject:toNSString(kvs->account) forKey:(id)kSecAttrAccount];
@@ -67,7 +67,7 @@ static NSMutableDictionary* createBaseQuery(const AppleKeychainOptions *kvs) {
     return query;
 }
 
-static void fillAttributesToUpdate(const AppleKeychainOptions *kvs, NSMutableDictionary* query, NSData* data) {
+static void fillAttributesToUpdate(const GenericPasswordKeychainAttributes *kvs, NSMutableDictionary* query, NSData* data) {
     if (kvs->label) {
         [query setObject:toNSString(kvs->label) forKey:(id)kSecAttrLabel];
     }
@@ -83,7 +83,7 @@ static void fillAttributesToUpdate(const AppleKeychainOptions *kvs, NSMutableDic
 ///////////////////////////////////////////////////////////
 // Get/Set key-value pairs
 ///////////////////////////////////////////////////////////
-static bool setData(const AppleKeychainOptions *kvs, id data) {
+static bool setKeychainData(const GenericPasswordKeychainAttributes *kvs, id data) {
     NSError* error = nil;
     NSData* archivedData = [NSKeyedArchiver archivedDataWithRootObject:data requiringSecureCoding:YES error:&error];
     if (error) {
@@ -114,7 +114,7 @@ static bool setData(const AppleKeychainOptions *kvs, id data) {
     }
 }
 
-static NSData* getData(const AppleKeychainOptions *kvs) {
+static NSData* getKeychainData(const GenericPasswordKeychainAttributes *kvs) {
     NSMutableDictionary* query = createBaseQuery(kvs);
     [query setObject:@YES forKey:(id)kSecReturnData];
     CFTypeRef existingData;
@@ -129,8 +129,8 @@ static NSData* getData(const AppleKeychainOptions *kvs) {
     }
 }
 
-static id getTypedData(const AppleKeychainOptions *kvs, Class cls) {
-    NSData* data = getData(kvs);
+static id getKeychainTypedData(const GenericPasswordKeychainAttributes *kvs, Class cls) {
+    NSData* data = getKeychainData(kvs);
     if (data) {
         NSError* error = nil;
         id value = [NSKeyedUnarchiver unarchivedObjectOfClass:cls fromData:data error:&error];
@@ -142,7 +142,7 @@ static id getTypedData(const AppleKeychainOptions *kvs, Class cls) {
     }
 }
 
-static bool deleteData(const AppleKeychainOptions *kvs) {
+static bool deleteKeychainData(const GenericPasswordKeychainAttributes *kvs) {
     NSMutableDictionary* query = createBaseQuery(kvs);
     OSStatus result = SecItemDelete((CFDictionaryRef)query);
     logSecError(result);
@@ -292,15 +292,15 @@ int KeyValueStoreAppleKeychain_DataGetLength(CFDataRef ref) {
     }
 }
 
-bool KeyValueStoreAppleKeychain_Save(const AppleKeychainOptions *kvs, NSMutableDictionary* dictionary) {
-    return setData(kvs, dictionary);
+bool KeyValueStoreAppleKeychain_Save(const GenericPasswordKeychainAttributes *kvs, NSMutableDictionary* dictionary) {
+    return setKeychainData(kvs, dictionary);
 }
 
-CFTypeRef KeyValueStoreAppleKeychain_Load(const AppleKeychainOptions *kvs) {
-    NSDictionary* dictionary = getTypedData(kvs, NSDictionary.class);
+CFTypeRef KeyValueStoreAppleKeychain_Load(const GenericPasswordKeychainAttributes *kvs) {
+    NSDictionary* dictionary = getKeychainTypedData(kvs, NSDictionary.class);
     return CFBridgingRetain([NSMutableDictionary dictionaryWithDictionary:dictionary]);
 }
 
-bool KeyValueStoreAppleKeychain_DeleteKeychain(const AppleKeychainOptions *kvs) {
-    return deleteData(kvs);
+bool KeyValueStoreAppleKeychain_DeleteKeychain(const GenericPasswordKeychainAttributes *kvs) {
+    return deleteKeychainData(kvs);
 }
