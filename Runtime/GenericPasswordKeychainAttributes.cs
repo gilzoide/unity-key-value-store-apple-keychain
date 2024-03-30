@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine;
 
 namespace Gilzoide.KeyValueStore.AppleKeychain
 {
@@ -23,6 +22,6 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
         public bool IsSynchronizable = false;
 
         [MarshalAs(UnmanagedType.Bool)]
-        private readonly bool _useDataProtectionKeychain = !Application.isEditor;
+        public bool UseDataProtectionKeychain = false;
     }
 }
