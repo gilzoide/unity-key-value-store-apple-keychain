@@ -54,8 +54,8 @@ typedef struct GenericPasswordKeychainAttributes {
     const char *accessGroup;
     const char *label;
     const char *description;
-    int isSynchronizable;
-    int useDataProtectionKeychain;
+    int8_t isSynchronizable;
+    int8_t useDataProtectionKeychain;
 } GenericPasswordKeychainAttributes;
 
 static NSMutableDictionary* createBaseQuery(const GenericPasswordKeychainAttributes *kvs) {
@@ -104,7 +104,7 @@ static bool setKeychainData(const GenericPasswordKeychainAttributes *kvs, id dat
     }
 
     NSMutableDictionary* query = createBaseQuery(kvs);
-    OSStatus result = SecItemCopyMatching((CFDictionaryRef) query, NULL);
+    OSStatus result = SecItemCopyMatching((CFDictionaryRef)query, NULL);
     switch (result) {
         case errSecSuccess: {
             NSMutableDictionary* attributesToUpdate = [NSMutableDictionary dictionary];

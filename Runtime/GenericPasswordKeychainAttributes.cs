@@ -21,10 +21,10 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
         [MarshalAs(UnmanagedType.LPUTF8Str)]
         public string Description = null;
 
-        [MarshalAs(UnmanagedType.Bool)]
+        [MarshalAs(UnmanagedType.I1)]
         public bool Synchronizable = false;
 
-        [MarshalAs(UnmanagedType.Bool)]
+        [MarshalAs(UnmanagedType.I1)]
         public bool UseDataProtectionKeychain = false;
     }
 }
