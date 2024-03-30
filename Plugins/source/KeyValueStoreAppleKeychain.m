@@ -92,6 +92,10 @@ static void fillAttributesToUpdate(const GenericPasswordKeychainAttributes *kvs,
 // Get/Set key-value pairs
 ///////////////////////////////////////////////////////////
 static bool setKeychainData(const GenericPasswordKeychainAttributes *kvs, id data) {
+    if (!data) {
+        return false;
+    }
+
     NSError* error = nil;
     NSData* archivedData = [NSKeyedArchiver archivedDataWithRootObject:data requiringSecureCoding:YES error:&error];
     if (error) {
