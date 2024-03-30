@@ -4,8 +4,15 @@
 
 ## Features
 - [GenericPasswordKeychainItemKeyValueStore](Runtime/GenericPasswordKeychainItemKeyValueStore.cs): Key-Value Store implementation that stores data into a Generic Password Keychain Item.
-  Value data is stored as a `NSDictionary` serialized by `NSKeyedArchiver`.
-- Supports Keychain Items synchronizable with iCloud, juse set `IsSynchronizable`
+  Value data is stored as a `NSMutableDictionary` and serialized using `NSKeyedArchiver`.
+- Supports the following Keychain Item attributes:
+  + [Account](https://developer.apple.com/documentation/security/ksecattraccount)
+  + [Service](https://developer.apple.com/documentation/security/ksecattrservice)
+  + [Access Group](https://developer.apple.com/documentation/security/ksecattraccessgroup): allows accessing shared keychain groups
+  + [Label](https://developer.apple.com/documentation/security/ksecattrlabel)
+  + [Description](https://developer.apple.com/documentation/security/ksecattrdescription)
+  + [Synchronizable](https://developer.apple.com/documentation/security/ksecattrsynchronizable): synchronization with iCloud
+  + **Use Data Protection Keychain**: only relevant on macOS
 
 
 ## Dependencies
