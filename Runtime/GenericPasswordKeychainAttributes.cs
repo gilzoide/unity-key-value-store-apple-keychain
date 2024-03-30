@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Gilzoide.KeyValueStore.AppleKeychain
 {
     [Serializable, StructLayout(LayoutKind.Sequential)]
-    public class AppleGenericPasswordKeychainAttributes
+    public class GenericPasswordKeychainAttributes
     {
         [MarshalAs(UnmanagedType.LPUTF8Str)]
         public string Account = null;

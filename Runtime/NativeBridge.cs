@@ -74,13 +74,13 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
 
         // Read/Write Keychain
         [DllImport(LibraryName)]
-        public static extern bool KeyValueStoreAppleKeychain_Save([In] AppleGenericPasswordKeychainAttributes kvs, IntPtr dictionary);
+        public static extern bool KeyValueStoreAppleKeychain_Save([In] GenericPasswordKeychainAttributes kvs, IntPtr dictionary);
 
         [DllImport(LibraryName)]
-        public static extern IntPtr KeyValueStoreAppleKeychain_Load([In] AppleGenericPasswordKeychainAttributes kvs);
+        public static extern IntPtr KeyValueStoreAppleKeychain_Load([In] GenericPasswordKeychainAttributes kvs);
 
         [DllImport(LibraryName)]
-        public static extern bool KeyValueStoreAppleKeychain_DeleteKeychain([In] AppleGenericPasswordKeychainAttributes kvs);
+        public static extern bool KeyValueStoreAppleKeychain_DeleteKeychain([In] GenericPasswordKeychainAttributes kvs);
     }
 }
 #endif

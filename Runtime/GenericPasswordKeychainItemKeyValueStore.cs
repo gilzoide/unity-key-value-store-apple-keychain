@@ -5,17 +5,17 @@ using Unity.Collections.LowLevel.Unsafe;
 
 namespace Gilzoide.KeyValueStore.AppleKeychain
 {
-    public class AppleGenericPasswordKeychainItemKeyValueStore : ISavableKeyValueStore, IDisposable
+    public class GenericPasswordKeychainItemKeyValueStore : ISavableKeyValueStore, IDisposable
     {
-        public AppleGenericPasswordKeychainAttributes KeychainAttributes { get; }
+        public GenericPasswordKeychainAttributes KeychainAttributes { get; }
 
         private IntPtr _mutableDictionary = IntPtr.Zero;
 
-        public AppleGenericPasswordKeychainItemKeyValueStore() : this(new AppleGenericPasswordKeychainAttributes())
+        public GenericPasswordKeychainItemKeyValueStore() : this(new GenericPasswordKeychainAttributes())
         {
         }
 
-        public AppleGenericPasswordKeychainItemKeyValueStore(AppleGenericPasswordKeychainAttributes attributes)
+        public GenericPasswordKeychainItemKeyValueStore(GenericPasswordKeychainAttributes attributes, bool autoload = true)
         {
             if (attributes == null)
             {
@@ -23,9 +23,13 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
             }
             KeychainAttributes = attributes;
             _mutableDictionary = NativeBridge.KeyValueStoreAppleKeychain_AllocDictionary();
+            if (autoload)
+            {
+                Load();
+            }
         }
 
-        ~AppleGenericPasswordKeychainItemKeyValueStore()
+        ~GenericPasswordKeychainItemKeyValueStore()
         {
             Dispose();
         }

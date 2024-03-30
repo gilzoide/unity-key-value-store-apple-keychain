@@ -3,7 +3,7 @@
 
 
 ## Features
-- [AppleGenericPasswordKeychainItemKeyValueStore](Runtime/AppleGenericPasswordKeychainItemKeyValueStore.cs): Key-Value Store implementation that stores data into a Generic Password Keychain Item.
+- [GenericPasswordKeychainItemKeyValueStore](Runtime/GenericPasswordKeychainItemKeyValueStore.cs): Key-Value Store implementation that stores data into a Generic Password Keychain Item.
   Value data is stored as a `NSDictionary` serialized by `NSKeyedArchiver`.
 - Supports Keychain Items synchronizable with iCloud, juse set `IsSynchronizable`
 
@@ -26,15 +26,15 @@ Either:
 using Gilzoide.KeyValueStore.AppleKeychain;
 using UnityEngine;
 
-// 1. Instantiate a AppleGenericPasswordKeychainItemKeyValueStore with the Keychain Item attributes
-var keychainItemAttributes = new AppleGenericPasswordKeychainAttributes
+// 1. Instantiate a GenericPasswordKeychainItemKeyValueStore with the Keychain Item attributes
+var keychainItemAttributes = new GenericPasswordKeychainAttributes
 {
     Service = Application.identifier,
     Description = "Small secrets used by the game",
     IsSynchronizable = true,  // synchronizable with iCloud
 };
 
-var kvs = new AppleGenericPasswordKeychainItemKeyValueStore(keychainItemAttributes);
+var kvs = new GenericPasswordKeychainItemKeyValueStore(keychainItemAttributes);
 
 
 // 2. Set/Get/Delete values
@@ -53,7 +53,11 @@ if (kvs.TryGetString("someKey", out string foundValue))
 kvs.DeleteKey("someKey");
 
 
-// 3. Dispose of the AppleGenericPasswordKeychainItemKeyValueStore when done
+// 3. Save the updated data into the keychain
+kvs.Save();
+
+
+// 4. Dispose of the GenericPasswordKeychainItemKeyValueStore when done
 // This ensures the native data gets released correctly
 kvs.Dispose();
 ```
