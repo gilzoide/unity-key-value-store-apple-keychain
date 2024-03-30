@@ -270,14 +270,30 @@ bool KeyValueStoreAppleKeychain_TryGetDouble(NSMutableDictionary* dict, const ch
     }
 }
 
-void KeyValueStoreAppleKeychain_SetData(NSMutableDictionary* dict, const char *key, const void *bytes, int length) {
+void KeyValueStoreAppleKeychain_SetBytes(NSMutableDictionary* dict, const char *key, const void *bytes, int length) {
     [dict setObject:[NSData dataWithBytes:bytes length:length] forKey:toNSString(key)];
 }
 
-bool KeyValueStoreAppleKeychain_TryGetData(NSMutableDictionary* dict, const char *key, CFDataRef *outValue) {
+bool KeyValueStoreAppleKeychain_TryGetBytes(NSMutableDictionary* dict, const char *key, CFDataRef *outValue) {
     id value = [dict valueForKey:toNSString(key)];
     if ([value isKindOfClass:NSData.class]) {
         *outValue = CFBridgingRetain(value);
+        return true;
+    }
+    else {
+        *outValue = nil;
+        return false;
+    }
+}
+
+void KeyValueStoreAppleKeychain_SetString(NSMutableDictionary* dict, const char *key, const char *cStr) {
+    [dict setObject:toNSString(cStr) forKey:toNSString(key)];
+}
+
+bool KeyValueStoreAppleKeychain_TryGetString(NSMutableDictionary* dict, const char *key, CFDataRef *outValue) {
+    id value = [dict valueForKey:toNSString(key)];
+    if ([value isKindOfClass:NSString.class]) {
+        *outValue = CFBridgingRetain([value dataUsingEncoding:NSUTF16StringEncoding]);
         return true;
     }
     else {

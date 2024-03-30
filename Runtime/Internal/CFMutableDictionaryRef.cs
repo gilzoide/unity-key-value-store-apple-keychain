@@ -40,13 +40,7 @@ namespace Gilzoide.KeyValueStore.AppleKeychain.Internal
 
         public void SetBytes(string key, byte[] value)
         {
-            unsafe
-            {
-                fixed (void* ptr = value)
-                {
-                    NativeBridge.KeyValueStoreAppleKeychain_SetData(this, key, ptr, value.Length);
-                }
-            }
+            NativeBridge.KeyValueStoreAppleKeychain_SetBytes(this, key, value, value.Length);
         }
 
         public void SetDouble(string key, double value)
@@ -71,13 +65,7 @@ namespace Gilzoide.KeyValueStore.AppleKeychain.Internal
 
         public void SetString(string key, string value)
         {
-            unsafe
-            {
-                fixed (void* ptr = value)
-                {
-                    NativeBridge.KeyValueStoreAppleKeychain_SetData(this, key, ptr, value.Length * sizeof(char));
-                }
-            }
+            NativeBridge.KeyValueStoreAppleKeychain_SetString(this, key, value);
         }
 
         public bool TryGetBool(string key, out bool value)
@@ -87,7 +75,7 @@ namespace Gilzoide.KeyValueStore.AppleKeychain.Internal
 
         public bool TryGetBytes(string key, out byte[] value)
         {
-            if (NativeBridge.KeyValueStoreAppleKeychain_TryGetData(this, key, out CFDataRef cfdata))
+            if (NativeBridge.KeyValueStoreAppleKeychain_TryGetBytes(this, key, out CFDataRef cfdata))
             {
                 using (cfdata)
                 {
@@ -124,7 +112,7 @@ namespace Gilzoide.KeyValueStore.AppleKeychain.Internal
 
         public bool TryGetString(string key, out string value)
         {
-            if (NativeBridge.KeyValueStoreAppleKeychain_TryGetData(this, key, out CFDataRef cfdata))
+            if (NativeBridge.KeyValueStoreAppleKeychain_TryGetString(this, key, out CFDataRef cfdata))
             {
                 using (cfdata)
                 {
