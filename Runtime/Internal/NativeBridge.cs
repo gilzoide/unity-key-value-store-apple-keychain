@@ -2,7 +2,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Gilzoide.KeyValueStore.AppleKeychain
+namespace Gilzoide.KeyValueStore.AppleKeychain.Internal
 {
     public static class NativeBridge
     {
@@ -21,10 +21,10 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
 
         // Read CFDataRef
         [DllImport(LibraryName)]
-        public static extern unsafe void* KeyValueStoreAppleKeychain_DataGetBytePtr(IntPtr cfdata);
+        public static extern IntPtr KeyValueStoreAppleKeychain_DataGetBytePtr(CFDataRef cfdata);
 
         [DllImport(LibraryName)]
-        public static extern int KeyValueStoreAppleKeychain_DataGetLength(IntPtr cfdata);
+        public static extern int KeyValueStoreAppleKeychain_DataGetLength(CFDataRef cfdata);
 
         // Read/Write internal NSMutableDictionary
         [DllImport(LibraryName)]
@@ -70,7 +70,7 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
         public static extern unsafe void KeyValueStoreAppleKeychain_SetData(IntPtr mutableDictionary, [MarshalAs(UnmanagedType.LPUTF8Str)] string key, void* bytes, int length);
 
         [DllImport(LibraryName)]
-        public static extern bool KeyValueStoreAppleKeychain_TryGetData(IntPtr mutableDictionary, [MarshalAs(UnmanagedType.LPUTF8Str)] string key, out IntPtr cfdata);
+        public static extern bool KeyValueStoreAppleKeychain_TryGetData(IntPtr mutableDictionary, [MarshalAs(UnmanagedType.LPUTF8Str)] string key, out CFDataRef cfdata);
 
         // Read/Write Keychain
         [DllImport(LibraryName)]

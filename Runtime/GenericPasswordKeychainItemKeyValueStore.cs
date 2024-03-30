@@ -1,7 +1,6 @@
 #if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS
 using System;
-using System.Runtime.InteropServices;
-using Unity.Collections.LowLevel.Unsafe;
+using Gilzoide.KeyValueStore.AppleKeychain.Internal;
 
 namespace Gilzoide.KeyValueStore.AppleKeychain
 {
@@ -114,20 +113,13 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
 
         public bool TryGetBytes(string key, out byte[] value)
         {
-            if (NativeBridge.KeyValueStoreAppleKeychain_TryGetData(_mutableDictionary, key, out IntPtr cfdata))
+            if (NativeBridge.KeyValueStoreAppleKeychain_TryGetData(_mutableDictionary, key, out CFDataRef cfdata))
             {
-                unsafe
+                using (cfdata)
                 {
-                    void* bytes = NativeBridge.KeyValueStoreAppleKeychain_DataGetBytePtr(cfdata);
-                    int length = NativeBridge.KeyValueStoreAppleKeychain_DataGetLength(cfdata);
-                    value = new byte[length];
-                    fixed (void* valuePtr = value)
-                    {
-                        UnsafeUtility.MemCpy(valuePtr, bytes, length);
-                    }
+                    value = cfdata.GetBytes();
+                    return true;
                 }
-                NativeBridge.KeyValueStoreAppleKeychain_Release(cfdata);
-                return true;
             }
             else
             {
@@ -158,16 +150,13 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
 
         public bool TryGetString(string key, out string value)
         {
-            if (NativeBridge.KeyValueStoreAppleKeychain_TryGetData(_mutableDictionary, key, out IntPtr cfdata))
+            if (NativeBridge.KeyValueStoreAppleKeychain_TryGetData(_mutableDictionary, key, out CFDataRef cfdata))
             {
-                unsafe
+                using (cfdata)
                 {
-                    void* bytes = NativeBridge.KeyValueStoreAppleKeychain_DataGetBytePtr(cfdata);
-                    int length = NativeBridge.KeyValueStoreAppleKeychain_DataGetLength(cfdata);
-                    value = Marshal.PtrToStringUni((IntPtr) bytes, length);
+                    value = cfdata.GetString();
+                    return true;
                 }
-                NativeBridge.KeyValueStoreAppleKeychain_Release(cfdata);
-                return true;
             }
             else
             {
