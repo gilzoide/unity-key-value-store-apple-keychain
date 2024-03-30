@@ -8,6 +8,7 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
     public class GenericPasswordKeychainItemKeyValueStore : ISavableKeyValueStore, IDisposable
     {
         public GenericPasswordKeychainAttributes KeychainAttributes { get; }
+        public bool SaveOnDispose { get; set; } = true;
 
         private IntPtr _mutableDictionary = IntPtr.Zero;
 
@@ -36,6 +37,10 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
 
         public void Dispose()
         {
+            if (SaveOnDispose)
+            {
+                Save();
+            }
             NativeBridge.KeyValueStoreAppleKeychain_Release(_mutableDictionary);
             _mutableDictionary = IntPtr.Zero;
         }
