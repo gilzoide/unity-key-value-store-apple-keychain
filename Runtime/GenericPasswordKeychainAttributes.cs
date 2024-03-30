@@ -13,6 +13,9 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
         public string Service = null;
 
         [MarshalAs(UnmanagedType.LPUTF8Str)]
+        public string AccessGroup = null;
+
+        [MarshalAs(UnmanagedType.LPUTF8Str)]
         public string Label = null;
 
         [MarshalAs(UnmanagedType.LPUTF8Str)]

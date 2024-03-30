@@ -39,6 +39,10 @@ static void logNSError(NSError* error) {
     }
 }
 
+static bool stringIsNullOrEmpty(const char *cStr) {
+    return cStr == NULL || cStr[0] == '\0';
+}
+
 static NSString* toNSString(const char *cStr) {
     return [NSString stringWithCString:cStr encoding:NSUTF8StringEncoding];
 }
@@ -47,6 +51,7 @@ static NSString* toNSString(const char *cStr) {
 typedef struct GenericPasswordKeychainAttributes {
     const char *account;
     const char *service;
+    const char *accessGroup;
     const char *label;
     const char *description;
     int isSynchronizable;
@@ -55,11 +60,14 @@ typedef struct GenericPasswordKeychainAttributes {
 
 static NSMutableDictionary* createBaseQuery(const GenericPasswordKeychainAttributes *kvs) {
     NSMutableDictionary* query = [NSMutableDictionary dictionaryWithObject:(id)kSecClassGenericPassword forKey:(id)kSecClass];
-    if (kvs->account) {
+    if (!stringIsNullOrEmpty(kvs->account)) {
         [query setObject:toNSString(kvs->account) forKey:(id)kSecAttrAccount];
     }
-    if (kvs->service) {
+    if (!stringIsNullOrEmpty(kvs->service)) {
         [query setObject:toNSString(kvs->service) forKey:(id)kSecAttrService];
+    }
+    if (!stringIsNullOrEmpty(kvs->accessGroup)) {
+        [query setObject:toNSString(kvs->accessGroup) forKey:(id)kSecAttrAccessGroup];
     }
     if (@available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, visionOS 1.0, *)) {
         [query setObject:@(kvs->useDataProtectionKeychain) forKey:(id)kSecUseDataProtectionKeychain];
@@ -68,10 +76,10 @@ static NSMutableDictionary* createBaseQuery(const GenericPasswordKeychainAttribu
 }
 
 static void fillAttributesToUpdate(const GenericPasswordKeychainAttributes *kvs, NSMutableDictionary* query, NSData* data) {
-    if (kvs->label) {
+    if (!stringIsNullOrEmpty(kvs->label)) {
         [query setObject:toNSString(kvs->label) forKey:(id)kSecAttrLabel];
     }
-    if (kvs->description) {
+    if (!stringIsNullOrEmpty(kvs->description)) {
         [query setObject:toNSString(kvs->description) forKey:(id)kSecAttrDescription];
     }
     if (@available(iOS 7.0, macOS 10.9, tvOS 9.0, watchOS 2.0, visionOS 1.0, *)) {
