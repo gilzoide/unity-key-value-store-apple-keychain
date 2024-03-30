@@ -22,7 +22,7 @@ namespace Gilzoide.KeyValueStore.AppleKeychain
         public string Description = null;
 
         [MarshalAs(UnmanagedType.Bool)]
-        public bool IsSynchronizable = false;
+        public bool Synchronizable = false;
 
         [MarshalAs(UnmanagedType.Bool)]
         public bool UseDataProtectionKeychain = false;
