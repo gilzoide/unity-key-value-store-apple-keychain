@@ -1,5 +1,7 @@
 # Apple Keychain Key-Value Store for Unity
-[Key-Value Store](https://github.com/gilzoide/unity-key-value-store) implementation backed by Apple platforms' [Keychain Services](https://developer.apple.com/documentation/security/keychain_services).
+[![openupm](https://img.shields.io/npm/v/com.gilzoide.key-value-store.apple-keychain?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.gilzoide.key-value-store.apple-keychain/)
+
+[Key-Value Store](https://github.com/gilzoide/unity-key-value-store) implementation backed by macOS / iOS / tvOS / visionOS [Keychain Services](https://developer.apple.com/documentation/security/keychain_services).
 
 
 ## Features
@@ -12,7 +14,7 @@
   + [Label](https://developer.apple.com/documentation/security/ksecattrlabel)
   + [Description](https://developer.apple.com/documentation/security/ksecattrdescription)
   + [Synchronizable](https://developer.apple.com/documentation/security/ksecattrsynchronizable): synchronization with iCloud
-  + **Use Data Protection Keychain**: only relevant on macOS
+  + [Use Data Protection Keychain](https://developer.apple.com/documentation/security/ksecusedataprotectionkeychain): only relevant on macOS
 
 
 ## Dependencies
@@ -21,6 +23,10 @@
 
 ## How to install
 Either:
+- Use the [openupm registry](https://openupm.com/) and install this package using the [openupm-cli](https://github.com/openupm/openupm-cli):
+  ```
+  openupm add com.gilzoide.key-value-store.apple-keychain
+  ```
 - Install using the [Unity Package Manager](https://docs.unity3d.com/Manual/upm-ui-giturl.html) with the following URL:
   ```
   https://github.com/gilzoide/unity-key-value-store-apple-keychain.git#1.0.0-preview1
