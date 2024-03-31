@@ -11,9 +11,23 @@ static IUnityLog *logger;
 static void debugLogFormat(NSString* fmt, ...) {
     va_list va;
     va_start(va, fmt);
-    NSString* msg = [[NSString alloc] initWithFormat:fmt arguments:va];
+    if (logger) {
+        NSString* msg = [[NSString alloc] initWithFormat:fmt arguments:va];
+        UNITY_LOG_ERROR(logger, msg.UTF8String);
+    }
+    else {
+        NSLogv(fmt, va);
+    }
     va_end(va);
-    UNITY_LOG(logger, msg.UTF8String);
+}
+
+static void debugLogError(NSString* msg) {
+    if (logger) {
+        UNITY_LOG_ERROR(logger, msg.UTF8String);
+    }
+    else {
+        NSLog(@"%@", msg);
+    }
 }
 
 /// Log OSStatus error messages to Unity's console.
@@ -26,7 +40,7 @@ static void logSecError(OSStatus result) {
 
         default: {
             NSString* error = CFBridgingRelease(SecCopyErrorMessageString(result, NULL));
-            UNITY_LOG_ERROR(logger, error.UTF8String);
+            debugLogError(error);
             break;
         }
     }
@@ -35,7 +49,7 @@ static void logSecError(OSStatus result) {
 /// Log NSError message to Unity's console.
 static void logNSError(NSError* error) {
     if (error) {
-        UNITY_LOG_ERROR(logger, error.debugDescription.UTF8String);
+        debugLogError(error.debugDescription);
     }
 }
 
