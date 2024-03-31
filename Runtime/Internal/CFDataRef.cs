@@ -10,8 +10,12 @@ namespace Gilzoide.KeyValueStore.AppleKeychain.Internal
 
         public byte[] GetBytes()
         {
-            IntPtr bytes = NativeBridge.KeyValueStoreAppleKeychain_DataGetBytePtr(this);
-            int length = NativeBridge.KeyValueStoreAppleKeychain_DataGetLength(this);
+            if (_nativeHandle == IntPtr.Zero)
+            {
+                return null;
+            }
+            IntPtr bytes = NativeBridge.CFDataGetBytePtr(this);
+            int length = checked((int) NativeBridge.CFDataGetLength(this));
             var value = new byte[length];
             Marshal.Copy(bytes, value, 0, length);
             return value;
@@ -19,15 +23,22 @@ namespace Gilzoide.KeyValueStore.AppleKeychain.Internal
 
         public string GetString()
         {
-            IntPtr bytes = NativeBridge.KeyValueStoreAppleKeychain_DataGetBytePtr(this);
-            int length = NativeBridge.KeyValueStoreAppleKeychain_DataGetLength(this);
+            if (_nativeHandle == IntPtr.Zero)
+            {
+                return null;
+            }
+            IntPtr bytes = NativeBridge.CFDataGetBytePtr(this);
+            int length = checked((int) NativeBridge.CFDataGetLength(this));
             return Marshal.PtrToStringUni(bytes, length);
         }
 
         public void Dispose()
         {
-            NativeBridge.KeyValueStoreAppleKeychain_Release(_nativeHandle);
-            _nativeHandle = IntPtr.Zero;
+            if (_nativeHandle != IntPtr.Zero)
+            {
+                NativeBridge.CFRelease(_nativeHandle);
+                _nativeHandle = IntPtr.Zero;
+            }
         }
     }
 }

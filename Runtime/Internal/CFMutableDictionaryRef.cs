@@ -14,8 +14,11 @@ namespace Gilzoide.KeyValueStore.AppleKeychain.Internal
 
         public void Dispose()
         {
-            NativeBridge.KeyValueStoreAppleKeychain_Release(_nativeHandle);
-            _nativeHandle = IntPtr.Zero;
+            if (_nativeHandle != IntPtr.Zero)
+            {
+                NativeBridge.CFRelease(_nativeHandle);
+                _nativeHandle = IntPtr.Zero;
+            }
         }
 
         public void DeleteAll()

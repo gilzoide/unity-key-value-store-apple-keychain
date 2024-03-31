@@ -16,15 +16,15 @@ namespace Gilzoide.KeyValueStore.AppleKeychain.Internal
         [DllImport(LibraryName)]
         public static extern CFMutableDictionaryRef KeyValueStoreAppleKeychain_AllocDictionary();
 
-        [DllImport(LibraryName)]
-        public static extern bool KeyValueStoreAppleKeychain_Release(IntPtr cftyperef);
+        [DllImport("__Internal")]
+        public static extern bool CFRelease(IntPtr cfref);
 
         // Read CFDataRef
-        [DllImport(LibraryName)]
-        public static extern IntPtr KeyValueStoreAppleKeychain_DataGetBytePtr(CFDataRef cfdata);
+        [DllImport("__Internal")]
+        public static extern IntPtr CFDataGetBytePtr(CFDataRef data);
 
-        [DllImport(LibraryName)]
-        public static extern int KeyValueStoreAppleKeychain_DataGetLength(CFDataRef cfdata);
+        [DllImport("__Internal")]
+        public static extern long CFDataGetLength(CFDataRef data);
 
         // Read/Write internal NSMutableDictionary
         [DllImport(LibraryName)]

@@ -186,12 +186,6 @@ CFTypeRef KeyValueStoreAppleKeychain_AllocDictionary() {
     return CFBridgingRetain([NSMutableDictionary dictionary]);
 }
 
-void KeyValueStoreAppleKeychain_Release(CFTypeRef ref) {
-    if (ref) {
-        CFRelease(ref);
-    }
-}
-
 void KeyValueStoreAppleKeychain_ClearDictionary(NSMutableDictionary* dict) {
     [dict removeAllObjects];
 }
@@ -313,24 +307,6 @@ bool KeyValueStoreAppleKeychain_TryGetString(NSMutableDictionary* dict, const ch
     else {
         *outValue = nil;
         return false;
-    }
-}
-
-const void *KeyValueStoreAppleKeychain_DataGetBytePtr(CFDataRef ref) {
-    if (ref) {
-        return CFDataGetBytePtr(ref);
-    }
-    else {
-        return NULL;
-    }
-}
-
-int KeyValueStoreAppleKeychain_DataGetLength(CFDataRef ref) {
-    if (ref) {
-        return CFDataGetLength(ref);
-    }
-    else {
-        return 0;
     }
 }
 
