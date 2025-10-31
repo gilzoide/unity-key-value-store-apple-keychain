@@ -86,6 +86,9 @@ static NSMutableDictionary* createBaseQuery(const GenericPasswordKeychainAttribu
     if (@available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, visionOS 1.0, *)) {
         [query setObject:@(kvs->useDataProtectionKeychain) forKey:(id)kSecUseDataProtectionKeychain];
     }
+    if (@available(iOS 7.0, macOS 10.9, tvOS 9.0, watchOS 2.0, visionOS 1.0, *)) {
+        [query setObject:@(kvs->isSynchronizable) forKey:(id)kSecAttrSynchronizable];
+    }
     return query;
 }
 
@@ -95,9 +98,6 @@ static void fillAttributesToUpdate(const GenericPasswordKeychainAttributes *kvs,
     }
     if (!stringIsNullOrEmpty(kvs->description)) {
         [query setObject:toNSString(kvs->description) forKey:(id)kSecAttrDescription];
-    }
-    if (@available(iOS 7.0, macOS 10.9, tvOS 9.0, watchOS 2.0, visionOS 1.0, *)) {
-        [query setObject:@(kvs->isSynchronizable) forKey:(id)kSecAttrSynchronizable];
     }
     [query setObject:data forKey:(id)kSecValueData];
 }
